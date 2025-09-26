@@ -1,0 +1,5 @@
+[deps]
+python = "3.7"
+
+[pip.deps]
+thoraxe = "==0.8.3"

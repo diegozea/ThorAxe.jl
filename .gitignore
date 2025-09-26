@@ -1,0 +1,11 @@
+.julia
+/.julia
+/.julia/
+/Manifest.toml
+/JuliaManifest.toml
+/CondaPkg.lock
+/docs/build/
+/deps/
+*.jl.cov
+*.jl.mem
+
