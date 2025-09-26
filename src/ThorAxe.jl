@@ -9,13 +9,8 @@ export thoraxe
 # =====
 
 """Convert `value` to a string suitable for the CLI."""
-function _stringify(value)
-    if value isa AbstractVector && !(value isa AbstractString)
-        return join(string.(value), ",")
-    else
-        return string(value)
-    end
-end
+_stringify(x) = string(x)
+_stringify(v::Union{AbstractVector,Tuple}) = join(string.(v), ",")
 
 """Append CLI flags to `cmd_parts` while skipping unset values."""
 function _push_option!(cmd_parts::Vector{String}, flags)
