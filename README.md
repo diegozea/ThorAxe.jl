@@ -8,7 +8,7 @@
 `ThorAxe.jl` is a lightweight Julia helper around the Python
 [`thoraxe`](https://pypi.org/project/thoraxe/) command-line tool.
 [CondaPkg.jl](https://github.com/JuliaPy/CondaPkg.jl) provisions a Python 3.7
-environment with `thoraxe==0.8.3`, keeping versions aligned.
+environment with `thoraxe==0.8.3`, so invoking `ThorAxe.thoraxe` works without manual Python setup.
 
 ## Getting started
 
@@ -16,20 +16,32 @@ environment with `thoraxe==0.8.3`, keeping versions aligned.
 pkg> add https://github.com/DiegoZea/ThorAxe.jl
 julia> using ThorAxe
 
-# Run thoraxe with the default CLI behaviour
-julia> ThorAxe.thoraxe("./input", "./output"; maxtsl = 3)
+# Run thoraxe with the default CLI behaviour (current directory inputs reused)
+julia> ThorAxe.thoraxe()
 
-# Build the command line parts if you need to inspect them
+# Override CLI flags directly from Julia
+julia> ThorAxe.thoraxe("./input"; mintranscripts = 4,
+                               specieslist = ["homo_sapiens", "mus_musculus"],
+                               canonical_criteria = ["TranscriptLength", "TSL"])
+
+# Build the command line parts if you need to inspect or tweak them
 julia> ThorAxe._push_option!(String["thoraxe"], (
            "--inputdir" => "./input",
-           "--outputdir" => "./output",
-           "--maxtsl" => 3,
-           "--minlen" => 4,
+           "--mintranscripts" => 4,
+           "--specieslist" => ["homo_sapiens", "mus_musculus"],
        ))
-["thoraxe", "--inputdir", "./input", "--outputdir", "./output", "--maxtsl", "3", "--minlen", "4"]
+["thoraxe", "--inputdir", "./input", "--mintranscripts", "4",
+ "--specieslist", "homo_sapiens,mus_musculus"]
 ```
 
-Positional arguments correspond to `inputdir` and `outputdir`. Other keywords mirror the flags from `thoraxe --help` (minus the leading `--`) and default to the same values. Booleans behave like switches and you can always reuse `_push_option!` to inspect or tweak the generated command before execution.
+Positional arguments correspond to `inputdir` and `outputdir` (defaulting to
+the current directory). Runtime keywords mirror the flags from `thoraxe --help`
+(without the leading `--`) and default to the values recorded in
+`ThorAxe.THORAXE_DEFAULTS`; the CLI-only `--version` switch remains available by
+calling the external executable directly. Booleans behave like switches,
+numbers are passed as-is, and vectors are joined with commas to match the CLI
+expectations. The default canonical criteria are
+`"MinimumConservation,MinimumTranscriptWeightedConservation,MeanTranscriptWeightedConservation,TranscriptLength,TSL"`.
 
 The first invocation triggers CondaPkg to solve and download the managed
 environment. Subsequent calls reuse the cached installation.

@@ -4,27 +4,27 @@ using ThorAxe
 
 function build_cmd_parts(inputdir, outputdir; kwargs...)
     # Mirror the keyword handling in `thoraxe` without spawning the external tool.
+    defaults = ThorAxe.THORAXE_DEFAULTS
     flags = (
         "--inputdir" => inputdir,
         "--outputdir" => outputdir,
-        "--aligner" => get(kwargs, :aligner, ThorAxe.THORAXE_DEFAULTS.aligner),
-        "--maxtsl" => get(kwargs, :maxtsl, ThorAxe.THORAXE_DEFAULTS.maxtsl),
-        "--minlen" => get(kwargs, :minlen, ThorAxe.THORAXE_DEFAULTS.minlen),
-        "--mingenes" => get(kwargs, :mingenes, ThorAxe.THORAXE_DEFAULTS.mingenes),
-        "--mintranscripts" => get(kwargs, :mintranscripts, ThorAxe.THORAXE_DEFAULTS.mintranscripts),
-        "--coverage" => get(kwargs, :coverage, ThorAxe.THORAXE_DEFAULTS.coverage),
-        "--identity" => get(kwargs, :identity, ThorAxe.THORAXE_DEFAULTS.identity),
-        "--gapopen" => get(kwargs, :gapopen, ThorAxe.THORAXE_DEFAULTS.gapopen),
-        "--gapextend" => get(kwargs, :gapextend, ThorAxe.THORAXE_DEFAULTS.gapextend),
-        "--rescue_unaligned_subexons" => get(kwargs, :rescue_unaligned_subexons, ThorAxe.THORAXE_DEFAULTS.rescue_unaligned_subexons),
-        "--padding" => get(kwargs, :padding, ThorAxe.THORAXE_DEFAULTS.padding),
-        "--phylosofs" => get(kwargs, :phylosofs, ThorAxe.THORAXE_DEFAULTS.phylosofs),
-        "--no_movements" => get(kwargs, :no_movements, ThorAxe.THORAXE_DEFAULTS.no_movements),
-        "--no_disintegration" => get(kwargs, :no_disintegration, ThorAxe.THORAXE_DEFAULTS.no_disintegration),
-        "--plot_chimerics" => get(kwargs, :plot_chimerics, ThorAxe.THORAXE_DEFAULTS.plot_chimerics),
-        "--specieslist" => get(kwargs, :specieslist, ThorAxe.THORAXE_DEFAULTS.specieslist),
-        "--canonical_criteria" => get(kwargs, :canonical_criteria, ThorAxe.THORAXE_DEFAULTS.canonical_criteria),
-        "--version" => get(kwargs, :version, ThorAxe.THORAXE_DEFAULTS.version),
+        "--aligner" => get(kwargs, :aligner, defaults.aligner),
+        "--maxtsl" => get(kwargs, :maxtsl, defaults.maxtsl),
+        "--minlen" => get(kwargs, :minlen, defaults.minlen),
+        "--mingenes" => get(kwargs, :mingenes, defaults.mingenes),
+        "--mintranscripts" => get(kwargs, :mintranscripts, defaults.mintranscripts),
+        "--coverage" => get(kwargs, :coverage, defaults.coverage),
+        "--identity" => get(kwargs, :identity, defaults.identity),
+        "--gapopen" => get(kwargs, :gapopen, defaults.gapopen),
+        "--gapextend" => get(kwargs, :gapextend, defaults.gapextend),
+        "--rescue_unaligned_subexons" => get(kwargs, :rescue_unaligned_subexons, defaults.rescue_unaligned_subexons),
+        "--padding" => get(kwargs, :padding, defaults.padding),
+        "--phylosofs" => get(kwargs, :phylosofs, defaults.phylosofs),
+        "--no_movements" => get(kwargs, :no_movements, defaults.no_movements),
+        "--no_disintegration" => get(kwargs, :no_disintegration, defaults.no_disintegration),
+        "--plot_chimerics" => get(kwargs, :plot_chimerics, defaults.plot_chimerics),
+        "--specieslist" => get(kwargs, :specieslist, defaults.specieslist),
+        "--canonical_criteria" => get(kwargs, :canonical_criteria, defaults.canonical_criteria),
     )
     parts = String["thoraxe"]
     # Reuse the production helper so the test fails if we change the CLI logic.
