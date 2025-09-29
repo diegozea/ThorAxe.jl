@@ -10,28 +10,21 @@
 [CondaPkg.jl](https://github.com/JuliaPy/CondaPkg.jl) provisions a Python 3.7
 environment with `thoraxe==0.8.3`, so invoking `ThorAxe.thoraxe` works without manual Python setup.
 
-## Getting started
+## Getting Started
 
 ```julia
 pkg> add https://github.com/DiegoZea/ThorAxe.jl
 julia> using ThorAxe
 
-# Run thoraxe with the default CLI behaviour (current directory inputs reused)
+# Run ThorAxe with the default settings (the current directory is used for both input and output)
 julia> ThorAxe.thoraxe()
-
-# Override CLI flags directly from Julia
-julia> ThorAxe.thoraxe("./input"; mintranscripts = 4,
-                               specieslist = ["homo_sapiens", "mus_musculus"],
-                               canonical_criteria = ["TranscriptLength", "TSL"])
 ```
 
-Positional arguments correspond to `inputdir` and `outputdir` (defaulting to
-the current directory). Runtime keywords mirror the flags from `thoraxe --help`
-(without the leading `--`) and default to the values recorded in
-`ThorAxe.THORAXE_DEFAULTS`. Booleans behave like switches,
-numbers are passed as-is, and vectors are joined with commas to match the CLI
-expectations. The default canonical criteria are
-`"MinimumConservation,MinimumTranscriptWeightedConservation,MeanTranscriptWeightedConservation,TranscriptLength,TSL"`.
+The positional arguments of the `thoraxe` function correspond to `inputdir` and `outputdir`. 
+Both default to the current directory, which you can check with `pwd()`. You can also use 
+keyword arguments to override any of the CLI options or flags (see the `thoraxe` help 
+with `?thoraxe` in the Julia REPL for the complete list).
 
-The first invocation triggers CondaPkg to solve and download the managed
-environment. Subsequent calls reuse the cached installation.
+On the first run, CondaPkg resolves and downloads the managed environment, which may take 
+some time. Subsequent runs reuse the cached installation and are faster.
+
