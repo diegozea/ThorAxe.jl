@@ -1,9 +1,9 @@
 .julia
 .CondaPkg
 Manifest.toml
+test/Manifest.toml
 CondaPkg
 /docs/build/
 /deps/
 *.jl.cov
 *.jl.mem
-
