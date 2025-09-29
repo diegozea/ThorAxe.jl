@@ -52,4 +52,6 @@ julia> ThorAxe._push_option!(String["thoraxe"], (
 
 ```@docs
 ThorAxe.thoraxe
+ThorAxe._push_option!
+ThorAxe._stringify
 ```
