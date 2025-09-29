@@ -23,15 +23,6 @@ julia> ThorAxe.thoraxe()
 julia> ThorAxe.thoraxe("data/in"; mintranscripts = 3,
                                specieslist = ["homo_sapiens", "mus_musculus"],
                                canonical_criteria = ["TranscriptLength", "TSL"])
-
-# Inspect the command parts if needed
-julia> ThorAxe._push_option!(String["thoraxe"], (
-           "--inputdir" => "data/in",
-           "--mintranscripts" => 3,
-           "--specieslist" => ["homo_sapiens", "mus_musculus"],
-       ))
-["thoraxe", "--inputdir", "data/in", "--mintranscripts", "3",
- "--specieslist", "homo_sapiens,mus_musculus"]
 ```
 
 Positional arguments map to the CLI defaults (`inputdir`, `outputdir`). Runtime
@@ -40,6 +31,22 @@ values recorded in `ThorAxe.THORAXE_DEFAULTS`. Booleans behave like switches,
 numbers are forwarded as-is, and vectors are joined with commas to match the CLI
 expectations. The default canonical ordering is stored in
 `ThorAxe.DEFAULT_CANONICAL_CRITERIA` (a comma-separated string).
+
+## Implementation details
+
+The helper `_push_option!` powers the CLI assembly by appending flag/value pairs
+while respecting unset keywords. You can call it directly if you need to inspect
+the command that will be executed:
+
+```julia
+julia> ThorAxe._push_option!(String["thoraxe"], (
+           "--inputdir" => "data/in",
+           "--mintranscripts" => 3,
+           "--specieslist" => ["homo_sapiens", "mus_musculus"],
+       ))
+["thoraxe", "--inputdir", "data/in", "--mintranscripts", "3",
+ "--specieslist", "homo_sapiens,mus_musculus"]
+```
 
 ## API reference
 

@@ -23,15 +23,6 @@ julia> ThorAxe.thoraxe()
 julia> ThorAxe.thoraxe("./input"; mintranscripts = 4,
                                specieslist = ["homo_sapiens", "mus_musculus"],
                                canonical_criteria = ["TranscriptLength", "TSL"])
-
-# Build the command line parts if you need to inspect or tweak them
-julia> ThorAxe._push_option!(String["thoraxe"], (
-           "--inputdir" => "./input",
-           "--mintranscripts" => 4,
-           "--specieslist" => ["homo_sapiens", "mus_musculus"],
-       ))
-["thoraxe", "--inputdir", "./input", "--mintranscripts", "4",
- "--specieslist", "homo_sapiens,mus_musculus"]
 ```
 
 Positional arguments correspond to `inputdir` and `outputdir` (defaulting to
