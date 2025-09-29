@@ -8,7 +8,7 @@ makedocs(;
     authors="Diego Javier Zea",
     sitename="ThorAxe.jl",
     format=Documenter.HTML(;
-        canonical="https://DiegoZea.github.io/ThorAxe.jl",
+        canonical="https://diegozea.github.io/ThorAxe.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -18,6 +18,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/DiegoZea/ThorAxe.jl",
+    repo="github.com/diegozea/ThorAxe.jl.git",
+    branch="gh-pages",
     devbranch="main",
 )
