@@ -64,10 +64,15 @@ open("thoraxe.log", "w") do io
 end
 ```
 
-## API reference
+## Public API
 
 ```@docs
 ThorAxe.thoraxe
+```
+
+## Internal Utilities
+
+```@docs
 ThorAxe._push_option!
 ThorAxe._stringify
 ```
