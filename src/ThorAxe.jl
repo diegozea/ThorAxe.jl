@@ -105,6 +105,9 @@ parentheses):
   * `canonical_criteria`: list of column names of the path_table separated by commas used 
     to sort the row. If nothing is indicated, 
     the following list is used: $(repr(DEFAULT_CANONICAL_CRITERIA))
+
+Any additional keyword arguments are forwarded to `Base.pipeline`, allowing you to pass 
+`stdout`, `stderr`, or other redirection options when invoking the CLI.
 """
 function thoraxe(inputdir::AbstractString=".",
     outputdir::Union{Nothing,AbstractString}="";
@@ -124,7 +127,8 @@ function thoraxe(inputdir::AbstractString=".",
     no_disintegration::Bool=THORAXE_DEFAULTS.no_disintegration,
     plot_chimerics::Bool=THORAXE_DEFAULTS.plot_chimerics,
     specieslist::Union{Nothing,AbstractString,AbstractVector{<:AbstractString}}=THORAXE_DEFAULTS.specieslist,
-    canonical_criteria::Union{Nothing,AbstractString,AbstractVector{<:AbstractString}}=THORAXE_DEFAULTS.canonical_criteria)
+    canonical_criteria::Union{Nothing,AbstractString,AbstractVector{<:AbstractString}}=THORAXE_DEFAULTS.canonical_criteria,
+    kwargs...)
     # Structured as a tuple so ordering matches the CLI help output.
     flags = (
         "--inputdir" => inputdir,
@@ -149,8 +153,25 @@ function thoraxe(inputdir::AbstractString=".",
     )
     cmd_parts = String["thoraxe"]
     _push_option!(cmd_parts, flags)
-    CondaPkg.withenv() do
-        run(Cmd(cmd_parts))
+    command = Cmd(cmd_parts)
+    pipeline_kwargs = Pair{Symbol,Any}[]
+    runner = run
+    withenv_fn = CondaPkg.withenv
+    for (name, value) in kwargs
+        if name === :runner
+            runner = value
+        elseif name === :withenv
+            withenv_fn = value
+        else
+            push!(pipeline_kwargs, name => value)
+        end
+    end
+    withenv_fn() do
+        if isempty(pipeline_kwargs)
+            runner(command)
+        else
+            runner(pipeline(command; pipeline_kwargs...))
+        end
     end
 end
 

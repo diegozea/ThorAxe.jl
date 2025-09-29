@@ -48,6 +48,22 @@ julia> ThorAxe._push_option!(String["thoraxe"], (
  "--specieslist", "homo_sapiens,mus_musculus"]
 ```
 
+Extra keywords on `ThorAxe.thoraxe` are forwarded to `Base.pipeline`,
+so you can redirect IO without manually spawning the command.
+
+```julia
+open("thoraxe.log", "w") do io
+    # Redirect CLI output to a log file. Without valid Ensembl inputs the
+    # call will throw (for example when `tsl.csv` is missing), so we catch
+    # it just to keep the REPL quiet while still recording stderr/stdout.
+    try
+        ThorAxe.thoraxe(stdout=io, stderr=io)
+    catch err
+        println(io, "thoraxe exited with error: ", err)
+    end
+end
+```
+
 ## API reference
 
 ```@docs

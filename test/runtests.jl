@@ -80,3 +80,22 @@ end
     @test !("--no_movements" in parts)
     @test !("--phylosofs" in parts)
 end
+
+
+@testset "io redirection example" begin
+    buffer = IOBuffer()
+    # Running the CLI without input data raises a missing-file error; we
+    # trap it so the example stays quiet while still exercising redirection.
+
+    err = try
+        ThorAxe.thoraxe(stdout=buffer, stderr=buffer)
+        nothing
+    catch e
+        e
+    end
+
+    @test err isa Base.ProcessFailedException
+    output = String(take!(buffer))
+    @test occursin("tsl.csv", output)
+end
+
