@@ -36,10 +36,9 @@ julia> ThorAxe._push_option!(String["thoraxe"], (
 
 Positional arguments map to the CLI defaults (`inputdir`, `outputdir`). Runtime
 keywords mirror the `thoraxe --help` flags (minus the leading `--`) and use the
-values recorded in `ThorAxe.THORAXE_DEFAULTS`; the CLI-only `--version` toggle
-is still accessible when calling the external executable. Booleans behave like
-switches, numbers are forwarded as-is, and vectors are joined with commas to
-match the CLI expectations. The default canonical ordering is stored in
+values recorded in `ThorAxe.THORAXE_DEFAULTS`. Booleans behave like switches,
+numbers are forwarded as-is, and vectors are joined with commas to match the CLI
+expectations. The default canonical ordering is stored in
 `ThorAxe.DEFAULT_CANONICAL_CRITERIA` (a comma-separated string).
 
 ## API reference

@@ -146,7 +146,6 @@ function thoraxe(inputdir::AbstractString=".",
         "--plot_chimerics" => plot_chimerics,
         "--specieslist" => specieslist,
         "--canonical_criteria" => canonical_criteria,
-        "--version" => version,
     )
     cmd_parts = String["thoraxe"]
     _push_option!(cmd_parts, flags)

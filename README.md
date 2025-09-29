@@ -37,8 +37,7 @@ julia> ThorAxe._push_option!(String["thoraxe"], (
 Positional arguments correspond to `inputdir` and `outputdir` (defaulting to
 the current directory). Runtime keywords mirror the flags from `thoraxe --help`
 (without the leading `--`) and default to the values recorded in
-`ThorAxe.THORAXE_DEFAULTS`; the CLI-only `--version` switch remains available by
-calling the external executable directly. Booleans behave like switches,
+`ThorAxe.THORAXE_DEFAULTS`. Booleans behave like switches,
 numbers are passed as-is, and vectors are joined with commas to match the CLI
 expectations. The default canonical criteria are
 `"MinimumConservation,MinimumTranscriptWeightedConservation,MeanTranscriptWeightedConservation,TranscriptLength,TSL"`.
