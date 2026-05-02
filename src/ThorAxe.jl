@@ -1,10 +1,10 @@
 
 module ThorAxe
 
-using CondaPkg
-using Downloads
-using SHA
-using Scratch
+using CondaPkg: CondaPkg
+using Downloads: Downloads
+using SHA: SHA
+using Scratch: @get_scratch!
 
 export thoraxe
 
@@ -33,7 +33,6 @@ function _push_option!(cmd_parts::Vector{String}, flags)
     return cmd_parts
 end
 
-
 # aligner management
 # ==================
 
@@ -45,7 +44,7 @@ const ALIGNER_URL = "https://github.com/PhyloSofS-Team/ProGraphMSA/raw/$ALIGNER_
 const ALIGNER_SHA256 = Dict(
     "ProGraphMSA_64" => "45c03fe2e240cf94667f8d71c08e5fbd175c57ad204d45f0cb1b89aa59631f5d",
     "ProGraphMSA_32" => "7c728ee733584d7fb9f424c02fecc3452e57475d8fffb653db42319036e85398",
-    "ProGraphMSA_osx" => "c3266f7691764aec727e13e880b20e55d352e020f81bf8e50ea52815f5cb9975",
+    "ProGraphMSA_osx" => "c3266f7691764aec727e13e880b20e55d352e020f81bf8e50ea52815f5cb9975"
 )
 
 _aligner_path(aligner_dir) = joinpath(aligner_dir, ALIGNER_NAME)
@@ -84,9 +83,9 @@ function _download_aligner(aligner_dir, filename)
         Downloads.download("$ALIGNER_URL/$filename", downloaded)
         _verify_aligner(downloaded, filename)
         chmod(downloaded, 0o755)
-        mv(downloaded, aligner; force=true)
+        mv(downloaded, aligner; force = true)
     finally
-        isfile(downloaded) && rm(downloaded; force=true)
+        isfile(downloaded) && rm(downloaded; force = true)
     end
     return aligner
 end
@@ -98,7 +97,7 @@ function get_aligner(aligner_dir)
         try
             _verify_aligner(aligner, filename)
         catch
-            rm(aligner; force=true)
+            rm(aligner; force = true)
             return _download_aligner(aligner_dir, filename)
         end
         chmod(aligner, 0o755)
@@ -117,12 +116,12 @@ function _space_safe_aligner_path(aligner)
     if _has_whitespace(base)
         throw(ErrorException("Default ProGraphMSA path contains whitespace and no whitespace-free temporary directory is available. Pass an explicit `aligner` path."))
     end
-    shim_dir = mktempdir(base; prefix="thoraxe-aligner-")
+    shim_dir = mktempdir(base; prefix = "thoraxe-aligner-")
     shim = joinpath(shim_dir, ALIGNER_NAME)
     try
         symlink(aligner, shim)
     catch
-        cp(aligner, shim; force=true)
+        cp(aligner, shim; force = true)
         chmod(shim, 0o755)
     end
     ALIGNER_SHIM_PATH[] = shim
@@ -136,7 +135,6 @@ function aligner_executable()
     return _space_safe_aligner_path(get_aligner(ALIGNER_PATH[]))
 end
 
-
 # thoraxe
 # =======
 
@@ -144,23 +142,23 @@ const DEFAULT_CANONICAL_CRITERIA = "MinimumConservation,MinimumTranscriptWeighte
 
 # Centralise the defaults so the docstring and the CLI builder stay in sync.
 const THORAXE_DEFAULTS = (
-    aligner=nothing,
-    maxtsl=3,
-    minlen=4,
-    mingenes=1,
-    mintranscripts=2,
-    coverage=80.0,
-    identity=30.0,
-    gapopen=-10,
-    gapextend=-1,
-    rescue_unaligned_subexons=false,
-    padding=10,
-    phylosofs=false,
-    no_movements=false,
-    no_disintegration=false,
-    plot_chimerics=false,
-    specieslist=nothing,
-    canonical_criteria=DEFAULT_CANONICAL_CRITERIA
+    aligner = nothing,
+    maxtsl = 3,
+    minlen = 4,
+    mingenes = 1,
+    mintranscripts = 2,
+    coverage = 80.0,
+    identity = 30.0,
+    gapopen = -10,
+    gapextend = -1,
+    rescue_unaligned_subexons = false,
+    padding = 10,
+    phylosofs = false,
+    no_movements = false,
+    no_disintegration = false,
+    plot_chimerics = false,
+    specieslist = nothing,
+    canonical_criteria = DEFAULT_CANONICAL_CRITERIA
 )
 
 """
@@ -215,26 +213,27 @@ parentheses):
 Any additional keyword arguments are forwarded to `Base.pipeline`, allowing you to pass 
 `stdout`, `stderr`, or other redirection options when invoking the CLI.
 """
-function thoraxe(inputdir::AbstractString=".",
-    outputdir::Union{Nothing,AbstractString}="";
-    aligner::Union{Nothing,AbstractString}=nothing,
-    maxtsl::Integer=THORAXE_DEFAULTS.maxtsl,
-    minlen::Integer=THORAXE_DEFAULTS.minlen,
-    mingenes::Integer=THORAXE_DEFAULTS.mingenes,
-    mintranscripts::Integer=THORAXE_DEFAULTS.mintranscripts,
-    coverage::Real=THORAXE_DEFAULTS.coverage,
-    identity::Real=THORAXE_DEFAULTS.identity,
-    gapopen::Integer=THORAXE_DEFAULTS.gapopen,
-    gapextend::Integer=THORAXE_DEFAULTS.gapextend,
-    rescue_unaligned_subexons::Bool=THORAXE_DEFAULTS.rescue_unaligned_subexons,
-    padding::Integer=THORAXE_DEFAULTS.padding,
-    phylosofs::Bool=THORAXE_DEFAULTS.phylosofs,
-    no_movements::Bool=THORAXE_DEFAULTS.no_movements,
-    no_disintegration::Bool=THORAXE_DEFAULTS.no_disintegration,
-    plot_chimerics::Bool=THORAXE_DEFAULTS.plot_chimerics,
-    specieslist::Union{Nothing,AbstractString,AbstractVector{<:AbstractString}}=THORAXE_DEFAULTS.specieslist,
-    canonical_criteria::Union{Nothing,AbstractString,AbstractVector{<:AbstractString}}=THORAXE_DEFAULTS.canonical_criteria,
-    kwargs...)
+function thoraxe(inputdir::AbstractString = ".",
+        outputdir::Union{Nothing, AbstractString} = "";
+        aligner::Union{Nothing, AbstractString} = nothing,
+        maxtsl::Integer = THORAXE_DEFAULTS.maxtsl,
+        minlen::Integer = THORAXE_DEFAULTS.minlen,
+        mingenes::Integer = THORAXE_DEFAULTS.mingenes,
+        mintranscripts::Integer = THORAXE_DEFAULTS.mintranscripts,
+        coverage::Real = THORAXE_DEFAULTS.coverage,
+        identity::Real = THORAXE_DEFAULTS.identity,
+        gapopen::Integer = THORAXE_DEFAULTS.gapopen,
+        gapextend::Integer = THORAXE_DEFAULTS.gapextend,
+        rescue_unaligned_subexons::Bool = THORAXE_DEFAULTS.rescue_unaligned_subexons,
+        padding::Integer = THORAXE_DEFAULTS.padding,
+        phylosofs::Bool = THORAXE_DEFAULTS.phylosofs,
+        no_movements::Bool = THORAXE_DEFAULTS.no_movements,
+        no_disintegration::Bool = THORAXE_DEFAULTS.no_disintegration,
+        plot_chimerics::Bool = THORAXE_DEFAULTS.plot_chimerics,
+        specieslist::Union{Nothing, AbstractString, AbstractVector{<:AbstractString}} = THORAXE_DEFAULTS.specieslist,
+        canonical_criteria::Union{
+            Nothing, AbstractString, AbstractVector{<:AbstractString}} = THORAXE_DEFAULTS.canonical_criteria,
+        kwargs...)
     # Structured as a tuple so ordering matches the CLI help output.
     aligner === nothing && (aligner = aligner_executable())
     flags = (
@@ -256,12 +255,12 @@ function thoraxe(inputdir::AbstractString=".",
         "--no_disintegration" => no_disintegration,
         "--plot_chimerics" => plot_chimerics,
         "--specieslist" => specieslist,
-        "--canonical_criteria" => canonical_criteria,
+        "--canonical_criteria" => canonical_criteria
     )
     cmd_parts = String["thoraxe"]
     _push_option!(cmd_parts, flags)
     command = Cmd(cmd_parts)
-    pipeline_kwargs = Pair{Symbol,Any}[]
+    pipeline_kwargs = Pair{Symbol, Any}[]
     runner = run
     withenv_fn = CondaPkg.withenv
     for (name, value) in kwargs

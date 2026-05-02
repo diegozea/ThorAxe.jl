@@ -1,24 +1,25 @@
 using ThorAxe
 using Documenter
 
-DocMeta.setdocmeta!(ThorAxe, :DocTestSetup, :(using ThorAxe); recursive=true)
+DocMeta.setdocmeta!(ThorAxe, :DocTestSetup, :(using ThorAxe); recursive = true)
 
 makedocs(;
-    modules=[ThorAxe],
-    authors="Diego Javier Zea",
-    sitename="ThorAxe.jl",
-    format=Documenter.HTML(;
-        canonical="https://diegozea.github.io/ThorAxe.jl",
-        edit_link="main",
-        assets=String[],
+    modules = [ThorAxe],
+    authors = "Diego Javier Zea",
+    sitename = "ThorAxe.jl",
+    format = Documenter.HTML(;
+        canonical = "https://diegozea.github.io/ThorAxe.jl",
+        edit_link = "main",
+        assets = String[]
     ),
-    pages=[
+    pages = [
         "Home" => "index.md",
-    ],
+        "API" => "api.md"
+    ]
 )
 
 deploydocs(;
-    repo="github.com/diegozea/ThorAxe.jl.git",
-    branch="gh-pages",
-    devbranch="main",
+    repo = "github.com/diegozea/ThorAxe.jl.git",
+    branch = "gh-pages",
+    devbranch = "main"
 )

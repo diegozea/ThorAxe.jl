@@ -18,14 +18,15 @@
             "--identity" => get(kwargs, :identity, defaults.identity),
             "--gapopen" => get(kwargs, :gapopen, defaults.gapopen),
             "--gapextend" => get(kwargs, :gapextend, defaults.gapextend),
-            "--rescue_unaligned_subexons" => get(kwargs, :rescue_unaligned_subexons, defaults.rescue_unaligned_subexons),
+            "--rescue_unaligned_subexons" => get(
+                kwargs, :rescue_unaligned_subexons, defaults.rescue_unaligned_subexons),
             "--padding" => get(kwargs, :padding, defaults.padding),
             "--phylosofs" => get(kwargs, :phylosofs, defaults.phylosofs),
             "--no_movements" => get(kwargs, :no_movements, defaults.no_movements),
             "--no_disintegration" => get(kwargs, :no_disintegration, defaults.no_disintegration),
             "--plot_chimerics" => get(kwargs, :plot_chimerics, defaults.plot_chimerics),
             "--specieslist" => get(kwargs, :specieslist, defaults.specieslist),
-            "--canonical_criteria" => get(kwargs, :canonical_criteria, defaults.canonical_criteria),
+            "--canonical_criteria" => get(kwargs, :canonical_criteria, defaults.canonical_criteria)
         )
         parts = String["thoraxe"]
         # Reuse the production helper so the test fails if we change the CLI logic.
@@ -52,7 +53,7 @@ end
         "--gapopen", "-10",
         "--gapextend", "-1",
         "--padding", "10",
-        "--canonical_criteria", ThorAxe.THORAXE_DEFAULTS.canonical_criteria,
+        "--canonical_criteria", ThorAxe.THORAXE_DEFAULTS.canonical_criteria
     ]
     @test parts == expected
 end
@@ -60,9 +61,9 @@ end
 @testitem "space-safe default aligner path" begin
     using ThorAxe
 
-    space_dir = mktempdir(; prefix="thor axe ")
+    space_dir = mktempdir(; prefix = "thor axe ")
     space_aligner = joinpath(space_dir, ThorAxe.ALIGNER_NAME)
-    cp(ThorAxe.aligner_executable(), space_aligner; force=true)
+    cp(ThorAxe.aligner_executable(), space_aligner; force = true)
     chmod(space_aligner, 0o755)
 
     safe_aligner = ThorAxe._space_safe_aligner_path(space_aligner)
@@ -76,7 +77,7 @@ end
         maxtsl = 5,
         coverage = 75.5,
         no_movements = true,
-        specieslist = ["human", "mouse"],
+        specieslist = ["human", "mouse"]
     )
     # Spot-check a mix of numerical, boolean, and vector arguments.
     @test parts[findfirst(==("--inputdir"), parts) + 1] == "/data/in"
@@ -92,7 +93,7 @@ end
 @testitem "CLI boolean flags" setup = [CliTestHelpers] begin
     parts = CliTestHelpers.build_cmd_parts(".", "";
         no_movements = false,
-        phylosofs = false,
+        phylosofs = false
     )
     # Boolean flags should drop entirely when false.
     @test !("--no_movements" in parts)
@@ -106,7 +107,7 @@ end
     # Running the CLI without input data raises a missing-file error; we
     # trap it so the example stays quiet while still exercising redirection.
     err = try
-        ThorAxe.thoraxe(stdout=buffer, stderr=buffer)
+        ThorAxe.thoraxe(stdout = buffer, stderr = buffer)
         nothing
     catch e
         e

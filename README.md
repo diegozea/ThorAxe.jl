@@ -3,6 +3,7 @@
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://DiegoZea.github.io/ThorAxe.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://DiegoZea.github.io/ThorAxe.jl/dev/)
 [![Build Status](https://github.com/DiegoZea/ThorAxe.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/DiegoZea/ThorAxe.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![Coverage](https://codecov.io/gh/DiegoZea/ThorAxe.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/DiegoZea/ThorAxe.jl)
 
 `ThorAxe.jl` is a lightweight Julia helper around the Python
@@ -28,3 +29,13 @@ with `?thoraxe` in the Julia REPL for the complete list).
 On the first run, CondaPkg resolves and downloads the managed environment, which may take 
 some time. Subsequent runs reuse the cached installation and are faster.
 
+## Citation
+
+If you use `ThorAxe.jl` in scientific work, please cite the ThorAxe paper:
+
+Zea DJ, Laskina S, Baudin A, Richard H, Laine E. **Assessing conservation of
+alternative splicing with evolutionary splicing graphs.** *Genome Research* 31(8):
+1462-1473 (2021). https://doi.org/10.1101/gr.274696.120
+
+Machine-readable citation metadata is available in `CITATION.cff` and
+`CITATION.bib`.
