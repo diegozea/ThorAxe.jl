@@ -1,4 +1,4 @@
-@testitem "CLI command wrapper" begin
+@testmodule CliTestHelpers begin
     using ThorAxe
 
     function build_cmd_parts(inputdir, outputdir; kwargs...)
@@ -31,82 +31,88 @@
         # Reuse the production helper so the test fails if we change the CLI logic.
         ThorAxe._push_option!(parts, flags)
     end
+end
 
-    @testset "default command" begin
-        parts = build_cmd_parts(".", "")
-        # Expect the same ordering exposed by `thoraxe --help`.
-        expected = [
-            "thoraxe",
-            "--inputdir", ".",
-            "--outputdir", "",
-            "--aligner", ThorAxe.aligner_executable(),
-            "--maxtsl", "3",
-            "--minlen", "4",
-            "--mingenes", "1",
-            "--mintranscripts", "2",
-            "--coverage", "80.0",
-            "--identity", "30.0",
-            "--gapopen", "-10",
-            "--gapextend", "-1",
-            "--padding", "10",
-            "--canonical_criteria", ThorAxe.THORAXE_DEFAULTS.canonical_criteria,
-        ]
-        @test parts == expected
+@testitem "default CLI command" setup = [CliTestHelpers] begin
+    using ThorAxe
+
+    parts = CliTestHelpers.build_cmd_parts(".", "")
+    # Expect the same ordering exposed by `thoraxe --help`.
+    expected = [
+        "thoraxe",
+        "--inputdir", ".",
+        "--outputdir", "",
+        "--aligner", ThorAxe.aligner_executable(),
+        "--maxtsl", "3",
+        "--minlen", "4",
+        "--mingenes", "1",
+        "--mintranscripts", "2",
+        "--coverage", "80.0",
+        "--identity", "30.0",
+        "--gapopen", "-10",
+        "--gapextend", "-1",
+        "--padding", "10",
+        "--canonical_criteria", ThorAxe.THORAXE_DEFAULTS.canonical_criteria,
+    ]
+    @test parts == expected
+end
+
+@testitem "space-safe default aligner path" begin
+    using ThorAxe
+
+    space_dir = mktempdir(; prefix="thor axe ")
+    space_aligner = joinpath(space_dir, ThorAxe.ALIGNER_NAME)
+    cp(ThorAxe.aligner_executable(), space_aligner; force=true)
+    chmod(space_aligner, 0o755)
+
+    safe_aligner = ThorAxe._space_safe_aligner_path(space_aligner)
+
+    @test isfile(safe_aligner)
+    @test !occursin(r"\s", safe_aligner)
+end
+
+@testitem "CLI keyword overrides" setup = [CliTestHelpers] begin
+    parts = CliTestHelpers.build_cmd_parts("/data/in", "/data/out";
+        maxtsl = 5,
+        coverage = 75.5,
+        no_movements = true,
+        specieslist = ["human", "mouse"],
+    )
+    # Spot-check a mix of numerical, boolean, and vector arguments.
+    @test parts[findfirst(==("--inputdir"), parts) + 1] == "/data/in"
+    @test parts[findfirst(==("--outputdir"), parts) + 1] == "/data/out"
+    @test parts[findfirst(==("--maxtsl"), parts) + 1] == "5"
+    @test parts[findfirst(==("--coverage"), parts) + 1] == "75.5"
+    @test "--no_movements" in parts
+    idx = findfirst(==("--specieslist"), parts)
+    @test idx !== nothing
+    @test parts[idx + 1] == "human,mouse"
+end
+
+@testitem "CLI boolean flags" setup = [CliTestHelpers] begin
+    parts = CliTestHelpers.build_cmd_parts(".", "";
+        no_movements = false,
+        phylosofs = false,
+    )
+    # Boolean flags should drop entirely when false.
+    @test !("--no_movements" in parts)
+    @test !("--phylosofs" in parts)
+end
+
+@testitem "CLI IO redirection" begin
+    using ThorAxe
+
+    buffer = IOBuffer()
+    # Running the CLI without input data raises a missing-file error; we
+    # trap it so the example stays quiet while still exercising redirection.
+    err = try
+        ThorAxe.thoraxe(stdout=buffer, stderr=buffer)
+        nothing
+    catch e
+        e
     end
 
-    @testset "space-safe default aligner path" begin
-        space_dir = mktempdir(; prefix="thor axe ")
-        space_aligner = joinpath(space_dir, ThorAxe.ALIGNER_NAME)
-        cp(ThorAxe.aligner_executable(), space_aligner; force=true)
-        chmod(space_aligner, 0o755)
-
-        safe_aligner = ThorAxe._space_safe_aligner_path(space_aligner)
-
-        @test isfile(safe_aligner)
-        @test !occursin(r"\s", safe_aligner)
-    end
-
-    @testset "overrides" begin
-        parts = build_cmd_parts("/data/in", "/data/out";
-            maxtsl = 5,
-            coverage = 75.5,
-            no_movements = true,
-            specieslist = ["human", "mouse"],
-        )
-        # Spot-check a mix of numerical, boolean, and vector arguments.
-        @test parts[findfirst(==("--inputdir"), parts) + 1] == "/data/in"
-        @test parts[findfirst(==("--outputdir"), parts) + 1] == "/data/out"
-        @test parts[findfirst(==("--maxtsl"), parts) + 1] == "5"
-        @test parts[findfirst(==("--coverage"), parts) + 1] == "75.5"
-        @test "--no_movements" in parts
-        idx = findfirst(==("--specieslist"), parts)
-        @test idx !== nothing
-        @test parts[idx + 1] == "human,mouse"
-    end
-
-    @testset "boolean off" begin
-        parts = build_cmd_parts(".", "";
-            no_movements = false,
-            phylosofs = false,
-        )
-        # Boolean flags should drop entirely when false.
-        @test !("--no_movements" in parts)
-        @test !("--phylosofs" in parts)
-    end
-
-    @testset "io redirection example" begin
-        buffer = IOBuffer()
-        # Running the CLI without input data raises a missing-file error; we
-        # trap it so the example stays quiet while still exercising redirection.
-        err = try
-            ThorAxe.thoraxe(stdout=buffer, stderr=buffer)
-            nothing
-        catch e
-            e
-        end
-
-        @test err isa Base.ProcessFailedException
-        output = String(take!(buffer))
-        @test occursin("tsl.csv", output)
-    end
+    @test err isa Base.ProcessFailedException
+    output = String(take!(buffer))
+    @test occursin("tsl.csv", output)
 end
