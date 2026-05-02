@@ -6,7 +6,7 @@ using Downloads: Downloads
 using SHA: SHA
 using Scratch: @get_scratch!
 
-export thoraxe
+export add_transcripts, thoraxe, transcript_query
 
 # utils
 # =====
@@ -31,6 +31,29 @@ function _push_option!(cmd_parts::Vector{String}, flags)
         end
     end
     return cmd_parts
+end
+
+function _run_cli_command(cmd_parts::Vector{String}; kwargs...)
+    command = Cmd(cmd_parts)
+    pipeline_kwargs = Pair{Symbol, Any}[]
+    runner = run
+    withenv_fn = CondaPkg.withenv
+    for (name, value) in kwargs
+        if name === :runner
+            runner = value
+        elseif name === :withenv
+            withenv_fn = value
+        else
+            push!(pipeline_kwargs, name => value)
+        end
+    end
+    withenv_fn() do
+        if isempty(pipeline_kwargs)
+            runner(command)
+        else
+            runner(pipeline(command; pipeline_kwargs...))
+        end
+    end
 end
 
 # aligner management
@@ -259,26 +282,88 @@ function thoraxe(inputdir::AbstractString = ".",
     )
     cmd_parts = String["thoraxe"]
     _push_option!(cmd_parts, flags)
-    command = Cmd(cmd_parts)
-    pipeline_kwargs = Pair{Symbol, Any}[]
-    runner = run
-    withenv_fn = CondaPkg.withenv
-    for (name, value) in kwargs
-        if name === :runner
-            runner = value
-        elseif name === :withenv
-            withenv_fn = value
-        else
-            push!(pipeline_kwargs, name => value)
-        end
-    end
-    withenv_fn() do
-        if isempty(pipeline_kwargs)
-            runner(command)
-        else
-            runner(pipeline(command; pipeline_kwargs...))
-        end
-    end
+    return _run_cli_command(cmd_parts; kwargs...)
+end
+
+# transcript_query
+# ================
+
+const TRANSCRIPT_QUERY_DEFAULTS = (
+    species = "homo_sapiens",
+    orthology = "1:1",
+    specieslist = "",
+    verbose = false
+)
+
+"""
+    transcript_query(genename; kwargs...)
+
+Run `transcript_query` from Julia. The positional argument is:
+
+  * `genename`: gene name in Ensembl, e.g. `MAPK8`, or an Ensembl stable ID without
+    a version suffix, e.g. `ENSG00000107643`.
+
+The following keyword arguments are available:
+
+  * `species`: species to look for the gene name ($(repr(TRANSCRIPT_QUERY_DEFAULTS.species))).
+  * `orthology`: orthology relationship to use, such as `1:1`, `1:n`, or `m:n`
+    ($(repr(TRANSCRIPT_QUERY_DEFAULTS.orthology))).
+  * `specieslist`: comma-separated species list, vector of species names, path to a
+    species-list file, or `nothing` to omit the CLI option
+    ($(repr(TRANSCRIPT_QUERY_DEFAULTS.specieslist))).
+  * `verbose`: print detailed progress ($(repr(TRANSCRIPT_QUERY_DEFAULTS.verbose))).
+
+Any additional keyword arguments are forwarded to `Base.pipeline`, allowing you to pass
+`stdout`, `stderr`, or other redirection options when invoking the CLI.
+"""
+function transcript_query(genename::AbstractString;
+        species::AbstractString = TRANSCRIPT_QUERY_DEFAULTS.species,
+        orthology::AbstractString = TRANSCRIPT_QUERY_DEFAULTS.orthology,
+        specieslist::Union{
+            Nothing, AbstractString, AbstractVector{<:AbstractString}} = TRANSCRIPT_QUERY_DEFAULTS.specieslist,
+        verbose::Bool = TRANSCRIPT_QUERY_DEFAULTS.verbose,
+        kwargs...)
+    flags = (
+        "--species" => species,
+        "--orthology" => orthology,
+        "--specieslist" => specieslist,
+        "--verbose" => verbose
+    )
+    cmd_parts = String["transcript_query"]
+    _push_option!(cmd_parts, flags)
+    push!(cmd_parts, genename)
+    return _run_cli_command(cmd_parts; kwargs...)
+end
+
+# add_transcripts
+# ===============
+
+const ADD_TRANSCRIPTS_DEFAULTS = (
+    verbose = false,
+)
+
+"""
+    add_transcripts(input, ensembl; kwargs...)
+
+Run `add_transcripts` from Julia. Positional arguments match the CLI ones:
+
+  * `input`: input CSV containing transcript data.
+  * `ensembl`: path to the Ensembl directory previously created by `transcript_query`.
+
+The following keyword argument is available:
+
+  * `verbose`: print detailed progress ($(repr(ADD_TRANSCRIPTS_DEFAULTS.verbose))).
+
+Any additional keyword arguments are forwarded to `Base.pipeline`, allowing you to pass
+`stdout`, `stderr`, or other redirection options when invoking the CLI.
+"""
+function add_transcripts(input::AbstractString, ensembl::AbstractString;
+        verbose::Bool = ADD_TRANSCRIPTS_DEFAULTS.verbose,
+        kwargs...)
+    cmd_parts = String["add_transcripts"]
+    _push_option!(cmd_parts, ("--verbose" => verbose,))
+    push!(cmd_parts, input, ensembl)
+    return _run_cli_command(cmd_parts; kwargs...)
 end
 
 function __init__()

@@ -19,12 +19,16 @@ julia> using ThorAxe
 
 # Run ThorAxe with the default settings (the current directory is used for both input and output)
 julia> ThorAxe.thoraxe()
+
+# Download Ensembl transcript data, then add custom transcript annotations
+julia> ThorAxe.transcript_query("MAPK8")
+julia> ThorAxe.add_transcripts("custom_transcripts.csv", "MAPK8/Ensembl")
 ```
 
-The positional arguments of the `thoraxe` function correspond to `inputdir` and `outputdir`. 
-Both default to the current directory, which you can check with `pwd()`. You can also use 
-keyword arguments to override any of the CLI options or flags (see the `thoraxe` help 
-with `?thoraxe` in the Julia REPL for the complete list).
+The positional arguments of the Julia functions correspond to their CLI positional
+arguments. You can also use keyword arguments to override any CLI options or flags
+(see `?thoraxe`, `?transcript_query`, and `?add_transcripts` in the Julia REPL for
+the complete lists).
 
 On the first run, CondaPkg resolves and downloads the managed environment, which may take 
 some time. Subsequent runs reuse the cached installation and are faster.

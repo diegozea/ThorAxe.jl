@@ -173,3 +173,109 @@ end
         "--aligner", "/tools/ProGraphMSA"
     ]
 end
+
+@testitem "transcript_query default command" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    withenv_calls = Ref(0)
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = (withenv_calls[] += 1; f())
+
+    ThorAxe.transcript_query("MAPK8";
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test withenv_calls[] == 1
+    @test captured_command[] isa Cmd
+    @test captured_command[].exec == [
+        "transcript_query",
+        "--species", "homo_sapiens",
+        "--orthology", "1:1",
+        "--specieslist", "",
+        "MAPK8"
+    ]
+end
+
+@testitem "transcript_query keyword overrides" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = f()
+
+    ThorAxe.transcript_query("ENSG00000107643";
+        species = "mus_musculus",
+        orthology = "1:n",
+        specieslist = ["homo_sapiens", "mus_musculus"],
+        verbose = true,
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test captured_command[].exec == [
+        "transcript_query",
+        "--species", "mus_musculus",
+        "--orthology", "1:n",
+        "--specieslist", "homo_sapiens,mus_musculus",
+        "--verbose",
+        "ENSG00000107643"
+    ]
+end
+
+@testitem "transcript_query can omit specieslist" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = f()
+
+    ThorAxe.transcript_query("MAPK8";
+        specieslist = nothing,
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test !("--specieslist" in captured_command[].exec)
+end
+
+@testitem "add_transcripts command" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = f()
+
+    ThorAxe.add_transcripts("custom.csv", "MAPK8/Ensembl";
+        verbose = true,
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test captured_command[] isa Cmd
+    @test captured_command[].exec == [
+        "add_transcripts",
+        "--verbose",
+        "custom.csv",
+        "MAPK8/Ensembl"
+    ]
+end
+
+@testitem "add_transcripts forwards pipeline redirection" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    buffer = IOBuffer()
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = f()
+
+    ThorAxe.add_transcripts("custom.csv", "MAPK8/Ensembl";
+        stdout = buffer,
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test captured_command[] isa Base.CmdRedirect
+    @test captured_command[].handle === buffer
+    @test captured_command[].cmd.exec == [
+        "add_transcripts",
+        "custom.csv",
+        "MAPK8/Ensembl"
+    ]
+end

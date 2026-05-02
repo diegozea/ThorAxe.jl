@@ -8,6 +8,8 @@ CurrentModule = ThorAxe
 
 ```@docs
 ThorAxe.thoraxe
+ThorAxe.transcript_query
+ThorAxe.add_transcripts
 ```
 
 ## Internal Utilities
