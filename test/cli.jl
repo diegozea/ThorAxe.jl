@@ -117,3 +117,59 @@ end
     output = String(take!(buffer))
     @test occursin("tsl.csv", output)
 end
+
+@testitem "CLI injected runner uses direct command branch" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    withenv_calls = Ref(0)
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = (withenv_calls[] += 1; f())
+
+    ThorAxe.thoraxe("/data/in", nothing;
+        aligner = "/tools/ProGraphMSA",
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test withenv_calls[] == 1
+    @test captured_command[] isa Cmd
+    @test captured_command[].exec == [
+        "thoraxe",
+        "--inputdir", "/data/in",
+        "--aligner", "/tools/ProGraphMSA",
+        "--maxtsl", "3",
+        "--minlen", "4",
+        "--mingenes", "1",
+        "--mintranscripts", "2",
+        "--coverage", "80.0",
+        "--identity", "30.0",
+        "--gapopen", "-10",
+        "--gapextend", "-1",
+        "--padding", "10",
+        "--canonical_criteria", ThorAxe.THORAXE_DEFAULTS.canonical_criteria
+    ]
+end
+
+@testitem "CLI injected runner receives pipeline when redirection is requested" begin
+    using ThorAxe
+
+    captured_command = Ref{Any}()
+    buffer = IOBuffer()
+    fake_runner(command) = (captured_command[] = command; nothing)
+    fake_withenv(f::Function) = f()
+
+    ThorAxe.thoraxe("/data/in", "/data/out";
+        aligner = "/tools/ProGraphMSA",
+        stdout = buffer,
+        runner = fake_runner,
+        withenv = fake_withenv)
+
+    @test captured_command[] isa Base.CmdRedirect
+    @test captured_command[].handle === buffer
+    @test captured_command[].cmd.exec[1:7] == [
+        "thoraxe",
+        "--inputdir", "/data/in",
+        "--outputdir", "/data/out",
+        "--aligner", "/tools/ProGraphMSA"
+    ]
+end
