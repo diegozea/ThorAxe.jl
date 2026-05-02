@@ -5,10 +5,12 @@ using ThorAxe
 function build_cmd_parts(inputdir, outputdir; kwargs...)
     # Mirror the keyword handling in `thoraxe` without spawning the external tool.
     defaults = ThorAxe.THORAXE_DEFAULTS
+    aligner = get(kwargs, :aligner, defaults.aligner)
+    aligner === nothing && (aligner = ThorAxe.aligner_executable())
     flags = (
         "--inputdir" => inputdir,
         "--outputdir" => outputdir,
-        "--aligner" => get(kwargs, :aligner, defaults.aligner),
+        "--aligner" => aligner,
         "--maxtsl" => get(kwargs, :maxtsl, defaults.maxtsl),
         "--minlen" => get(kwargs, :minlen, defaults.minlen),
         "--mingenes" => get(kwargs, :mingenes, defaults.mingenes),
@@ -38,7 +40,7 @@ end
         "thoraxe",
         "--inputdir", ".",
         "--outputdir", "",
-        "--aligner", "ProGraphMSA",
+        "--aligner", ThorAxe.aligner_executable(),
         "--maxtsl", "3",
         "--minlen", "4",
         "--mingenes", "1",
@@ -51,6 +53,18 @@ end
         "--canonical_criteria", ThorAxe.THORAXE_DEFAULTS.canonical_criteria,
     ]
     @test parts == expected
+end
+
+@testset "space-safe default aligner path" begin
+    space_dir = mktempdir(; prefix="thor axe ")
+    space_aligner = joinpath(space_dir, ThorAxe.ALIGNER_NAME)
+    cp(ThorAxe.aligner_executable(), space_aligner; force=true)
+    chmod(space_aligner, 0o755)
+
+    safe_aligner = ThorAxe._space_safe_aligner_path(space_aligner)
+
+    @test isfile(safe_aligner)
+    @test !occursin(r"\s", safe_aligner)
 end
 
 @testset "overrides" begin
@@ -98,4 +112,3 @@ end
     output = String(take!(buffer))
     @test occursin("tsl.csv", output)
 end
-

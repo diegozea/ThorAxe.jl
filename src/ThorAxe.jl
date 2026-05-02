@@ -2,6 +2,9 @@
 module ThorAxe
 
 using CondaPkg
+using Downloads
+using SHA
+using Scratch
 
 export thoraxe
 
@@ -31,6 +34,109 @@ function _push_option!(cmd_parts::Vector{String}, flags)
 end
 
 
+# aligner management
+# ==================
+
+const ALIGNER_NAME = "ProGraphMSA"
+const ALIGNER_PATH = Ref{String}()
+const ALIGNER_SHIM_PATH = Ref{String}()
+const ALIGNER_COMMIT = "555ccf273baa56e67ee4724565976f1184e0bbc5"
+const ALIGNER_URL = "https://github.com/PhyloSofS-Team/ProGraphMSA/raw/$ALIGNER_COMMIT/bin"
+const ALIGNER_SHA256 = Dict(
+    "ProGraphMSA_64" => "45c03fe2e240cf94667f8d71c08e5fbd175c57ad204d45f0cb1b89aa59631f5d",
+    "ProGraphMSA_32" => "7c728ee733584d7fb9f424c02fecc3452e57475d8fffb653db42319036e85398",
+    "ProGraphMSA_osx" => "c3266f7691764aec727e13e880b20e55d352e020f81bf8e50ea52815f5cb9975",
+)
+
+_aligner_path(aligner_dir) = joinpath(aligner_dir, ALIGNER_NAME)
+
+_has_whitespace(path) = occursin(r"\s", path)
+
+function _aligner_filename()
+    @static if Sys.islinux()
+        if Sys.ARCH === :x86_64
+            return "ProGraphMSA_64"
+        elseif Sys.ARCH === :i686 || Sys.ARCH === :i386
+            return "ProGraphMSA_32"
+        end
+    elseif Sys.isapple()
+        if Sys.ARCH === :x86_64
+            return "ProGraphMSA_osx"
+        end
+    end
+    throw(ErrorException("ProGraphMSA can not be installed on $(Sys.KERNEL) $(Sys.ARCH)."))
+end
+
+function _verify_aligner(path, filename)
+    expected = ALIGNER_SHA256[filename]
+    actual = bytes2hex(open(SHA.sha256, path))
+    if actual != expected
+        throw(ErrorException("Downloaded ProGraphMSA checksum mismatch for $filename: expected $expected, got $actual."))
+    end
+    return nothing
+end
+
+function _download_aligner(aligner_dir, filename)
+    mkpath(aligner_dir)
+    aligner = _aligner_path(aligner_dir)
+    downloaded = tempname(aligner_dir)
+    try
+        Downloads.download("$ALIGNER_URL/$filename", downloaded)
+        _verify_aligner(downloaded, filename)
+        chmod(downloaded, 0o755)
+        mv(downloaded, aligner; force=true)
+    finally
+        isfile(downloaded) && rm(downloaded; force=true)
+    end
+    return aligner
+end
+
+function get_aligner(aligner_dir)
+    filename = _aligner_filename()
+    aligner = _aligner_path(aligner_dir)
+    if isfile(aligner)
+        try
+            _verify_aligner(aligner, filename)
+        catch
+            rm(aligner; force=true)
+            return _download_aligner(aligner_dir, filename)
+        end
+        chmod(aligner, 0o755)
+        return aligner
+    end
+    return _download_aligner(aligner_dir, filename)
+end
+
+function _space_safe_aligner_path(aligner)
+    !_has_whitespace(aligner) && return aligner
+    if isassigned(ALIGNER_SHIM_PATH) && isfile(ALIGNER_SHIM_PATH[])
+        return ALIGNER_SHIM_PATH[]
+    end
+    tmp = tempdir()
+    base = isdir("/tmp") && !_has_whitespace("/tmp") ? "/tmp" : tmp
+    if _has_whitespace(base)
+        throw(ErrorException("Default ProGraphMSA path contains whitespace and no whitespace-free temporary directory is available. Pass an explicit `aligner` path."))
+    end
+    shim_dir = mktempdir(base; prefix="thoraxe-aligner-")
+    shim = joinpath(shim_dir, ALIGNER_NAME)
+    try
+        symlink(aligner, shim)
+    catch
+        cp(aligner, shim; force=true)
+        chmod(shim, 0o755)
+    end
+    ALIGNER_SHIM_PATH[] = shim
+    return shim
+end
+
+function aligner_executable()
+    if !isassigned(ALIGNER_PATH)
+        ALIGNER_PATH[] = @get_scratch!("aligner")
+    end
+    return _space_safe_aligner_path(get_aligner(ALIGNER_PATH[]))
+end
+
+
 # thoraxe
 # =======
 
@@ -38,7 +144,7 @@ const DEFAULT_CANONICAL_CRITERIA = "MinimumConservation,MinimumTranscriptWeighte
 
 # Centralise the defaults so the docstring and the CLI builder stay in sync.
 const THORAXE_DEFAULTS = (
-    aligner="ProGraphMSA",
+    aligner=nothing,
     maxtsl=3,
     minlen=4,
     mingenes=1,
@@ -70,7 +176,7 @@ Run `thoraxe` from Julia. Positional arguments match the thoraxe CLI ones:
 The following keyword arguments are available (with their respective default values in 
 parentheses):
 
-  * `aligner`: path to ProGraphMSA ($(repr(THORAXE_DEFAULTS.aligner))).
+  * `aligner`: path to ProGraphMSA (defaults to the executable downloaded into the package scratch directory).
   * `maxtsl`: maximum Transcript Support Level (TSL) to use when TSL is available for a 
     transcript ($(repr(THORAXE_DEFAULTS.maxtsl))).
   * `minlen`: minimum exon length ($(repr(THORAXE_DEFAULTS.minlen))).
@@ -111,7 +217,7 @@ Any additional keyword arguments are forwarded to `Base.pipeline`, allowing you 
 """
 function thoraxe(inputdir::AbstractString=".",
     outputdir::Union{Nothing,AbstractString}="";
-    aligner::AbstractString=THORAXE_DEFAULTS.aligner,
+    aligner::Union{Nothing,AbstractString}=nothing,
     maxtsl::Integer=THORAXE_DEFAULTS.maxtsl,
     minlen::Integer=THORAXE_DEFAULTS.minlen,
     mingenes::Integer=THORAXE_DEFAULTS.mingenes,
@@ -130,6 +236,7 @@ function thoraxe(inputdir::AbstractString=".",
     canonical_criteria::Union{Nothing,AbstractString,AbstractVector{<:AbstractString}}=THORAXE_DEFAULTS.canonical_criteria,
     kwargs...)
     # Structured as a tuple so ordering matches the CLI help output.
+    aligner === nothing && (aligner = aligner_executable())
     flags = (
         "--inputdir" => inputdir,
         "--outputdir" => outputdir,
@@ -173,6 +280,11 @@ function thoraxe(inputdir::AbstractString=".",
             runner(pipeline(command; pipeline_kwargs...))
         end
     end
+end
+
+function __init__()
+    ALIGNER_PATH[] = @get_scratch!("aligner")
+    return nothing
 end
 
 end # module

@@ -320,7 +320,7 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 version = "1.11.0"
 
 [[deps.ThorAxe]]
-deps = ["CondaPkg"]
+deps = ["CondaPkg", "Downloads", "SHA", "Scratch"]
 path = "/home/diego.zea/projects/ThorAxe.jl"
 uuid = "cf6a4a95-c6c1-4b3e-818d-24edc886ccb5"
 version = "0.8.3"
