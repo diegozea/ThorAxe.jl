@@ -7,9 +7,9 @@ CurrentModule = ThorAxe
 ## Public API
 
 ```@docs
-ThorAxe.thoraxe
 ThorAxe.transcript_query
 ThorAxe.add_transcripts
+ThorAxe.thoraxe
 ```
 
 ## Internal Utilities
