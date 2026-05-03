@@ -1,7 +1,7 @@
 name = "ThorAxe"
 uuid = "cf6a4a95-c6c1-4b3e-818d-24edc886ccb5"
 authors = ["Diego Javier Zea"]
-version = "0.8.3"
+version = "0.9.0"
 
 [deps]
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
